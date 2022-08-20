@@ -30,26 +30,18 @@ import matplotlib.pyplot as plt
 
 import http.server
 import socketserver
-import uploadserver
-PORT = 8000
-#get_ipython().run_line_magic('matplotlib', 'inline')
+import io
+import cgi
 
 
-handler = http.server.SimpleHTTPRequestHandler
-
-#with socketserver.TCPServer(("", PORT), handler) as httpd:
-#    print("Server started at localhost:" + str(PORT))
-#    httpd.serve_forever()
 
 def learn():
-# In[ ]:
 
 
     with open('./agora_hack_products/agora_hack_products.json', encoding='utf-8') as f:
        prdct = json.load(f)
 
 
-    # In[ ]:
 
 
     prdct[0]
@@ -639,7 +631,7 @@ def identify():
        t = json.load(f)
     
     #with open('./agora_hack_products/input.json', encoding='utf-8') as f:
-    with open('./agora_hack_products/agora_hack_products.json', encoding='utf-8') as f:
+    with open('./INPUT_DATA.json', encoding='utf-8') as f:
        prdct = json.load(f)
     
     df = pd.DataFrame.from_dict(prdct, orient='columns')
@@ -676,7 +668,56 @@ def identify():
         index, max_value = max(enumerate(test_pred[i]), key=lambda i_v: i_v[1])
         test_pred_class.append((index))
         test_pred_values.append((max_value))
-    print(test_pred_class)
+
+    #здесь нужна какая-то жсонификация данных под шаблон
+    return str(test_pred_class)
 
 #learn()
-identify()
+
+
+PORT = 8100
+#get_ipython().run_line_magic('matplotlib', 'inline')
+
+
+class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+
+    def do_POST(self):        
+        r, info = self.deal_post_data()
+        print(r, info, "by: ", self.client_address)
+        f = io.BytesIO()
+        if r:
+            f.write(b"Success\n")
+        else:
+            f.write(b"Failed\n")
+        length = f.tell()
+        f.seek(0)
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.send_header("Content-Length", str(length))
+        self.end_headers()
+        if f:
+            self.copyfile(f, self.wfile)
+            f.close()      
+
+    def deal_post_data(self):
+        ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
+        pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
+        pdict['CONTENT-LENGTH'] = int(self.headers['Content-Length'])
+        if ctype == 'multipart/form-data':
+            form = cgi.FieldStorage( fp=self.rfile, headers=self.headers, environ={'REQUEST_METHOD':'POST', 'CONTENT_TYPE':self.headers['Content-Type'], })
+            print (type(form))
+            try:
+                if isinstance(form["file"], list):
+                    for record in form["file"]:
+                        open("./%s"%record.filename, "wb").write(record.file.read())
+                else:
+                    open("./%s"%form["file"].filename, "wb").write(form["file"].file.read())
+            except IOError:
+                    return (False, "Can't create file to write, do you have permission to write?")
+        
+        return (True, identify())
+
+Handler = CustomHTTPRequestHandler
+with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    print("serving at port", PORT)
+    httpd.serve_forever()
