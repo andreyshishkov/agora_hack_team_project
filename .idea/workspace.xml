@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58be21e9-a26e-4e69-9046-dab94835cc90" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/application/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/application/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/tf_idf_model.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/data/tf_idf_model.pkl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/notebooks/test.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/test.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
