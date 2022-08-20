@@ -4,6 +4,7 @@
 # In[698]:
 
 
+from distutils.command.upload import upload
 import pandas as pd
 import numpy as np
 import json
@@ -17,11 +18,11 @@ tqdm.pandas()
 # In[699]:
 
 
-from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.models import Sequential, load_model, save_model
 from tensorflow.keras.layers import Dense, Embedding, MaxPooling1D, Conv1D, GlobalMaxPooling1D, Dropout, LSTM, GRU
 from tensorflow.keras import utils
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras import utils
 
@@ -29,7 +30,7 @@ import matplotlib.pyplot as plt
 
 import http.server
 import socketserver
-
+import uploadserver
 PORT = 8000
 #get_ipython().run_line_magic('matplotlib', 'inline')
 
@@ -425,7 +426,7 @@ def learn():
                                           monitor='val_accuracy',
                                           save_best_only=True,
                                           verbose=1)
-
+    #model_cnn.save_model('./model_weights/best_model_cnn')
 
     # In[ ]:
 
@@ -633,9 +634,49 @@ def learn():
 
 
 def identify():
-    with open("./agora_hack_products/tokinaizer.json", "r") as infile:
-        tokenizer=json.load(infile)
-    model = load_model("my_model")
-    # Далее код разбора запроса
+    t=Tokenizer()
+    with open("./agora_hack_products/tokinaizer.json", encoding='utf-8') as f:
+       t = json.load(f)
+    
+    #with open('./agora_hack_products/input.json', encoding='utf-8') as f:
+    with open('./agora_hack_products/agora_hack_products.json', encoding='utf-8') as f:
+       prdct = json.load(f)
+    
+    df = pd.DataFrame.from_dict(prdct, orient='columns')
+    def jn(x):
+        x = " ".join([ch for ch in x])
+        x = str(x)
+        return x
 
-learn()
+
+
+
+    df['props_un'] = df['props'].apply(jn)
+    # Далее код разбора запроса
+    model_cnn = Sequential()
+    model_cnn_save_path = './model_weights/best_model_cnn.h5'
+    
+    model_cnn = Sequential()
+
+
+    model_cnn.load_weights(model_cnn_save_path)
+    #model_cnn.load_model(model_cnn_save_path)
+    t.fit_on_texts(df['props_un'])
+    x_test = df['props_un']
+    y_test_pred_cnn = model_cnn.predict(x_test, verbose=1)
+    test_pred = np.zeros(y_test_pred_cnn.shape)
+    for i in tqdm(range(y_test_pred_cnn.shape[0])):
+        for j in range(y_test_pred_cnn.shape[1]):
+            test_pred[i,j] = max(y_test_pred_cnn[i,j])
+
+    test_pred.shape
+    test_pred_class = []
+    test_pred_values = []
+    for i in range(len(test_pred)):
+        index, max_value = max(enumerate(test_pred[i]), key=lambda i_v: i_v[1])
+        test_pred_class.append((index))
+        test_pred_values.append((max_value))
+    print(test_pred_class)
+
+#learn()
+identify()
