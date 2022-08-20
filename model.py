@@ -74,6 +74,37 @@ def count_words(df):
             pop_words.append(i)
     return pop_words
 
+
+# на вход получает 2 предсказания из CNN & GRU
+# test, y
+# write2File=True - автоматическая запись предсказания в файл, в таком случае нужно передать. По умолчание result.json
+# write2File=False - вернет предсказание
+def predict2json(y_test_pred_cnn, y_test_pred_gru, test, y, path='result.json', write2File=True):
+    test_pred = np.zeros(y_test_pred_cnn.shape)
+    for i in tqdm(range(y_test_pred_cnn.shape[0])):
+        for j in range(y_test_pred_cnn.shape[1]):
+            test_pred[i, j] = max(y_test_pred_cnn[i, j], y_test_pred_gru[i, j])
+
+    test_pred_class = []
+    for i in range(len(test_pred)):
+        index, max_value = max(enumerate(test_pred[i]), key=lambda i_v: i_v[1])
+        test_pred_class.append(index)
+
+    test['reference_id'] = 0
+
+    for i in tqdm(test.index):
+        test['reference_id'].iloc[i] = test_pred_class[i]
+
+    test['reference_id'] = test['reference_id'].apply(lambda x: y.columns[x])
+    out = test[['id', 'reference_id']].to_json(orient='records')
+
+    if write2File:
+        with open(path, 'w') as f:
+            f.write(out)
+    else:
+        return out
+
+
 def main():
     df = pd.read_json('agora_hack_products/agora_hack_products.json')
     labels = df[df['is_reference'] == True]['product_id'].count()
@@ -149,25 +180,7 @@ def main():
     y_test_pred_cnn = cnn.predict(x_test_2)
     y_test_pred_gru = gru_model.predict(x_test_2)
 
-    test_pred = np.zeros(y_test_pred_cnn.shape)
-    for i in tqdm(range(y_test_pred_cnn.shape[0])):
-        for j in range(y_test_pred_cnn.shape[1]):
-            test_pred[i, j] = max(y_test_pred_cnn[i, j], y_test_pred_gru[i, j])
-
-    test_pred_class = []
-    for i in range(len(test_pred)):
-        index, max_value = max(enumerate(test_pred[i]), key=lambda i_v: i_v[1])
-        test_pred_class.append(index)
-
-    test['reference_id'] = 0
-
-    for i in tqdm(test.index):
-        test['reference_id'].iloc[i] = test_pred_class[i]
-
-    test['reference_id'] = test['reference_id'].apply(lambda x: y.columns[x])
-
-    out = test[['id', 'reference_id']].to_json(orient='records')
-
+    predict2json(y_test_pred_cnn, y_test_pred_gru, test, y)
 
 if __name__ == '__main__':
     main()
