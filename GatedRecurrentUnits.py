@@ -1,3 +1,6 @@
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Embedding, Conv1D, GlobalMaxPooling1D, GRU
+
 # GRU нейронная сеть
 class GRU_byRuslan:
     # Задаем гиперпараметры
