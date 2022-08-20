@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from classes import Response, Request
+from application.classes import Response, Request, SingleResponse
 import pandas as pd
 import pickle
 
@@ -10,5 +10,20 @@ app = FastAPI(description='API для сопоставления товаров 
 async def get_results(message: Request):
     items = [[item.id, item.name, item.props] for item in message.items]
     df = pd.DataFrame(items, columns=['id', 'name', 'props'])
+    index = pd.DataFrame(df['id']).values.tolist()
 
-    with open('data/tf_idf_model.pkl', 'r')
+    with open('data/tf_idf_model.pkl', 'r') as file:
+        model = pickle.load(file)
+    texts = preprocess_data(df)
+    predictions = model.predict(texts)
+    predictions = predictions.tolist()
+
+    response = [SingleResponse(id=ind, reference_id=val) for ind, val in zip(index, predictions)]
+    return Response(items=response)
+
+
+def preprocess_data(df):
+    df['string_props'] = df['props'].apply(lambda x: ' '.join(x).lower())
+    df['text'] = df['name'] + '. ' + df['string_props']
+    df['text'] = df['text'].apply(lambda x: x.replace('\t', ' '))
+    return df['text']
