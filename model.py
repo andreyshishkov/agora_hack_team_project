@@ -6,14 +6,19 @@ import pandas as pd
 import pymorphy2
 from nltk.corpus import stopwords
 from tqdm import tqdm
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Embedding, Conv1D, GlobalMaxPooling1D, GRU
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.callbacks import ModelCheckpoint
 from sklearn.model_selection import train_test_split
 
+from convolutionalNeuralNetwork import CNN_byRuslan
+from GatedRecurrentUnits import GRU_byRuslan
+
 tqdm.pandas()
+
+df = pd.read_json('agora_hack_products/agora_hack_products.json')
+# Максимальная длина новости
+max_news_len = 67
+
 
 # Preprocessing texts
 def prepr(df):
@@ -50,8 +55,10 @@ def prepr(df):
     print("Обработка текстовых данных закончилась")
 
 
-# создадим словарь уникальных слов для токенизации
+prepr(df)
 
+
+# создадим словарь уникальных слов для токенизации
 def count_words(df):
     unique_words = {}
     for i in tqdm(df.index):
@@ -74,72 +81,70 @@ def count_words(df):
     return pop_words
 
 
-# сверточная нейронная сеть
-class CNN_byRuslan:
-    def __init__(self, num_words, max_news_len, model_cnn_save_path='./output/best_model_cnn.h5'):
-        self.num_words = num_words
-        self.max_news_len = max_news_len
-        self.model_cnn_save_path = model_cnn_save_path
-
-    def forward(self, x_train, y_train):
-        model_cnn = Sequential()
-        model_cnn.add(Embedding(self.num_words, 128, input_length=self.max_news_len))
-        model_cnn.add(Conv1D(1024, 5, padding='valid', activation='relu'))
-        model_cnn.add(GlobalMaxPooling1D())
-        model_cnn.add(Dense(512, activation='relu'))
-        model_cnn.add(Dense(471, activation='softmax'))
-        model_cnn.compile(optimizer='adam',
-                          loss='categorical_crossentropy',
-                          metrics=['accuracy'])
-        checkpoint_callback_cnn = ModelCheckpoint(self.model_cnn_save_path,
-                                                  monitor='val_accuracy',
-                                                  save_best_only=True,
-                                                  verbose=1)
-        return model_cnn.fit(x_train,
-                             y_train,
-                             epochs=10,
-                             batch_size=64,
-                             validation_split=0.02,
-                             callbacks=[checkpoint_callback_cnn])
+# Максимальное количество слов
+num_words = len(count_words(df))
 
 
-class GRU_byRuslan:
-    def __init__(self, num_words, max_news_len, model_gru_save_path='./output/best_model_cnn.h5'):
-        self.num_words = num_words
-        self.max_news_len = max_news_len
-        self.model_gru_save_path = model_gru_save_path
+# Получает DataFrame
+def prerpocess_file(text):
+    # Препоцессинг текста
+    prepr(text)
 
-    def forward(self, x_train, y_train):
-        model_gru = Sequential()
-        model_gru.add(Embedding(self.num_words, 304, input_length=self.max_news_len))
-        model_gru.add(GRU(152))
-        model_gru.add(Dense(471, activation='softmax'))
-        model_gru.compile(optimizer='adam',
-                          loss='categorical_crossentropy',
-                          metrics=['accuracy'])
-        checkpoint_callback_gru = ModelCheckpoint(self.model_gru_save_path,
-                                                  monitor='val_accuracy',
-                                                  save_best_only=True,
-                                                  verbose=1)
-        return model_gru.fit(x_train,
-                             y_train,
-                             epochs=10,
-                             batch_size=64,
-                             validation_split=0.02,
-                             callbacks=[checkpoint_callback_gru])
+    # Сборка самой модели
+    cnn = CNN_byRuslan(num_words=num_words,
+                       max_news_len=max_news_len)
+    cnn.build()  # сборка модели
+
+    tokenizer = Tokenizer(num_words=num_words)
+    tokenizer.fit_on_texts(df['props_un'])
+    # теконезация текста
+    test_2_sequences = tokenizer.texts_to_sequences(text['props'])
+    x_test_2 = pad_sequences(test_2_sequences, maxlen=max_news_len)
+
+    # загрузка весов
+    cnn.load_weights('./output/best_model_cnn.h5')
+    # выполняем предсказание
+    y_test_pred_cnn = cnn.predict(x_test_2)
+
+    # по умолчанию стоит запись в файл
+    predict2json(y_test_pred_cnn, text, pd.get_dummies(df['reference_id']))
+
+
+# на вход получает 2 предсказания из CNN & GRU
+# test, y
+# write2File=True - автоматическая запись предсказания в файл, в таком случае нужно передать. По умолчание result.json
+# write2File=False - вернет предсказание
+def predict2json(y_test_pred_cnn, test, y, path='result.json', write2File=True):
+    test_pred = np.zeros(y_test_pred_cnn.shape)
+
+    for i in tqdm(range(y_test_pred_cnn.shape[0])):
+        for j in range(y_test_pred_cnn.shape[1]):
+            test_pred[i, j] = y_test_pred_cnn[i, j]
+
+    test_pred_class = []
+    for i in range(len(test_pred)):
+        index, max_value = max(enumerate(test_pred[i]), key=lambda i_v: i_v[1])
+        test_pred_class.append(index)
+
+    test['reference_id'] = 0
+
+    for i in tqdm(test.index):
+        test['reference_id'].iloc[i] = test_pred_class[i]
+
+    test['reference_id'] = test['reference_id'].apply(lambda x: y.columns[x])
+    out = test[['id', 'reference_id']].to_json(orient='records')
+
+    if write2File:
+        with open(path, 'w') as f:
+            f.write(out)
+    else:
+        return out
 
 
 def main():
-    df = pd.read_json('agora_hack_products/agora_hack_products.json')
     labels = df[df['is_reference'] == True]['product_id'].count()
 
     df.loc[(df['is_reference'] == True), 'reference_id'] = df['product_id']
-
-    prepr(df)
-    # Максимальное количество слов
-    num_words = len(count_words(df))
-    # Максимальная длина новости
-    max_news_len = 67
     # Количество классов новостей
     nb_classes = labels
 
@@ -147,7 +152,7 @@ def main():
     X = df['props_un']
     y = df['reference_id']
 
-    y = pd.get_dummies(y)
+    y = pd.get_dummies(df['reference_id'])
 
     X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                         stratify=y,
@@ -169,16 +174,24 @@ def main():
     x_test = pad_sequences(test_sequences, maxlen=max_news_len)
 
     # Сверточная нейронная сеть
-    print("Светроточная нейронная сеть: ")
-    history_cnn = CNN_byRuslan(num_words=num_words,
-                               max_news_len=max_news_len,
-                               model_cnn_save_path='./output/best_model_cnn_2.h5').forward(x_train, y_train)
+    # print("Светроточная нейронная сеть: ")
+    #
+    # cnn = CNN_byRuslan(num_words=num_words,
+    #                    max_news_len=max_news_len)
+    # cnn.build()  # сборка модели
+    # history_cnn = cnn.forward(x_train, y_train) # обучение
+    with open('agora_hack_products/test_request.json', encoding='utf-8') as f:
+        tst = json.load(f)
 
-    # Cеть GRU
-    print("Сеть GRU: ")
-    history_gru = CNN_byRuslan(num_words=num_words,
-                               max_news_len=max_news_len,
-                               model_cnn_save_path='./output/best_model_gru_2.h5').forward(x_train, y_train)
+    # Создание DataFrame из словаря
+    test = pd.DataFrame.from_dict(tst, orient='columns')
+    # Предобработка данных
+
+    #
+    # test_2_sequences = tokenizer.texts_to_sequences(test['props'])
+    # x_test_2 = pad_sequences(test_2_sequences, maxlen=max_news_len)
+
+    prerpocess_file(test)
 
 
 if __name__ == '__main__':

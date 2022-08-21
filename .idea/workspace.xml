@@ -5,33 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58be21e9-a26e-4e69-9046-dab94835cc90" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Baseline_Sadykov.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/INPUT_DATA.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Sandbox.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/agora_hack_products/agora_hack_products.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/agora_hack_products/test_request.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/agora_hack_products/test_request_sampl.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/agora_hack_products/tokinaizer.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identify.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/make_docker.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model_weights/best_model_cnn.h5" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model_weights/best_model_gru.h5" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model_weights/best_model_lstm.h5" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/output/best_model_cnn.h5" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/output/best_model_gru.h5" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/output/test_answer.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/output/tokinaizer.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sadykov-nlp-s-i.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Распределение_эталонов.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/application/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/tf_idf_model.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/data/tf_idf_model.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/.ipynb_checkpoints/test-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/.ipynb_checkpoints/test-checkpoint.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/test.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/test.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
