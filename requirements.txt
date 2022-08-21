@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 anyio==3.6.1
 asgiref==3.5.2
 certifi==2022.6.15
@@ -38,6 +39,8 @@ uvloop==0.16.0
 watchgod==0.8.2
 websockets==10.3
 =======
+=======
+>>>>>>> e008d0231a04564049285c9ef1d2803756960fd1
 nltk==3.7
 numpy==1.23.2
 pandas==1.4.3
@@ -45,5 +48,9 @@ pymorphy2~=0.9.1
 tqdm==4.64.0
 tensorflow==2.9.1
 scikit-learn~=1.1.2
+<<<<<<< HEAD
 matplotlib==3.5.3
 >>>>>>> main
+=======
+matplotlib==3.5.3
+>>>>>>> e008d0231a04564049285c9ef1d2803756960fd1
