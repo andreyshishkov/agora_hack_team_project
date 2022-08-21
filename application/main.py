@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+<<<<<<< HEAD
 from application.classes import Response, Request, SingleResponse
 import pandas as pd
 import pickle
@@ -8,12 +9,20 @@ import re
 app = FastAPI(description='API для сопоставления товаров с их эталонами')
 with open('data/tf_idf_model.pkl', 'rb') as file:
     model = pickle.load(file)
+=======
+from classes import Response, Request
+import pandas as pd
+import pickle
+
+app = FastAPI(description='API для сопоставления товаров с их эталонами')
+>>>>>>> main
 
 
 @app.post('/get_results')
 async def get_results(message: Request):
     items = [[item.id, item.name, item.props] for item in message.items]
     df = pd.DataFrame(items, columns=['id', 'name', 'props'])
+<<<<<<< HEAD
     index = df['id'].values.tolist()
     print(index[0], type(index[0]))
 
@@ -31,3 +40,7 @@ def preprocess_data(df):
     df['text'] = df['text'].apply(lambda x: x.replace('\t', ' '))
     return df['text']
 
+=======
+
+    with open('data/tf_idf_model.pkl', 'r')
+>>>>>>> main
